@@ -1,0 +1,5 @@
+npm run build
+tidy dist/index.html > ../flasknode/static/index.html
+cp dist/js/* ../flasknode/static/js
+cp dist/css/* ../flasknode/static/css
+cp dist/img/* ../flasknode/static/img
