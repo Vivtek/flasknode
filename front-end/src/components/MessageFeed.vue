@@ -1,6 +1,5 @@
 <template>
  <v-card>
- Test.
  {{ info }}
  </v-card>
 </template>
@@ -14,11 +13,11 @@ export default {
   data: () => ({
     info: null
   }),
-  mounted: () => {
+  mounted () {
     axios
        .get('http://localhost:5000/message/list')
-       .then(response => (this.info = response))
-       .catch(error => { console.log(error) })
+       .then(response => (this.info = response.data))
+
   }
 };
 </script>
