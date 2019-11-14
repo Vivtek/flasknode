@@ -30,19 +30,19 @@
     </v-app-bar>
 
     <v-content>
-      <HelloWorld/>
+      <MessageFeed/>
     </v-content>
   </v-app>
 </template>
 
 <script>
-//import HelloWorld from './components/HelloWorld';
+import MessageFeed from './components/MessageFeed';
 
 export default {
   name: 'App',
 
   components: {
-    //HelloWorld,
+    MessageFeed
   },
 
   data: () => ({
