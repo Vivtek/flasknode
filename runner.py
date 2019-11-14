@@ -1,3 +1,5 @@
 from flasknode import app
+from flask_socketio import SocketIO
 
-app.run()
+socketio = SocketIO(app)
+socketio.run(app)
