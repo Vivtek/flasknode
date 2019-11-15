@@ -3,9 +3,9 @@
    <v-form
      ref="form"
    >
-     <v-text-field
+     <v-textarea
       v-model="message"
-     ></v-text-field>
+     ></v-textarea>
      <v-btn
       color="success"
       class="mr-4"
@@ -28,12 +28,15 @@ export default {
   }),
   methods: {
     post () {
-       axios
-          .post('http://localhost:5000/message/post',
-             {
-                message: this.message,
-             }
-          )
+       if (this.message != null) {
+          axios
+             .post('http://localhost:5000/message/post',
+                {
+                   message: this.message,
+                }
+             )
+          this.message = null
+       }
     }
   }
 };
