@@ -30,6 +30,7 @@
     </v-app-bar>
 
     <v-content>
+      <MessagePostForm/>
       <MessageFeed/>
     </v-content>
   </v-app>
@@ -37,12 +38,14 @@
 
 <script>
 import MessageFeed from './components/MessageFeed';
+import MessagePostForm from './components/MessagePostForm';
 
 export default {
   name: 'App',
 
   components: {
-    MessageFeed
+    MessageFeed,
+    MessagePostForm
   },
 
   data: () => ({

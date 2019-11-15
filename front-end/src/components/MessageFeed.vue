@@ -1,7 +1,15 @@
 <template>
- <v-card>
- {{ info }}
- </v-card>
+ <v-layout row wrap>
+  <v-flex xs8 offset-md2>
+   <div v-for="message in messages" :key="message.id">
+    <v-card raised>
+     <v-card-title>Message #{{ message.id }}</v-card-title>
+     <v-card-text>{{ message.message }}</v-card-text>
+    </v-card>
+    <v-spacer></v-spacer>
+   </div>
+  </v-flex>
+ </v-layout>
 </template>
 
 <script>
@@ -11,12 +19,12 @@ export default {
   name: 'MessageFeed',
 
   data: () => ({
-    info: null
+    messages: null
   }),
   mounted () {
     axios
        .get('http://localhost:5000/message/list')
-       .then(response => (this.info = response.data))
+       .then(response => (this.messages = response.data))
 
   }
 };
