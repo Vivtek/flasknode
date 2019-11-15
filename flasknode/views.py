@@ -1,5 +1,6 @@
 from flasknode import app, db
 from flask import jsonify
+from flask import request
 
 @app.route('/client')
 def json_client():
@@ -8,18 +9,11 @@ def json_client():
       version=client['version']
    )
 
-@app.route('/feed')
-def feed_list():
-   return jsonify(
-      username='me',
-      email='me@email.com',
-      id=42
-   )
-   
-@app.route('/message/new', methods=['POST'])
+@app.route('/message/post', methods=['POST'])
 def message_new():
    # Note: error handling with request.is_json
    content = request.get_json()
+   print (content);
    
    return "ok"
    
