@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import MessageFeed from './components/MessageFeed';
+import MessageFeed from './components/MessageFeed'
 
 export default {
   name: 'App',
