@@ -1,4 +1,4 @@
-from flasknode import app, db
+from flasknode import app, db, model
 from flask import jsonify
 from flask import request
 
@@ -11,14 +11,13 @@ def json_client():
 
 @app.route('/message/post', methods=['POST'])
 def message_new():
-   # Note: error handling with request.is_json
+   # Note: error handling with request.is_json?
    content = request.get_json()
-   print (content);
-   
-   return "ok"
+   model.new_message(content['message'])
+   return 'ok'
    
 @app.route('/message/list')
 def message_list():
-   messages = db.query ('select * from message')
-   return jsonify ([{'id':message['message_id'], 'subject':message['subject'], 'message':message['message']} for message in messages])
+   messages = db.query ('select * from message order by create_date desc limit 20')
+   return jsonify ([{'id':message['message_id'], 'subject':message['subject'], 'date':message['create_date'], 'message':message['message']} for message in messages])
 
