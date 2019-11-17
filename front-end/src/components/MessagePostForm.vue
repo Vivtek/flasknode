@@ -3,7 +3,7 @@
    <v-form
      ref="form"
    >
-     <v-textarea
+     <v-textarea placeholder="What are you thinking today?"
       v-model="message"
      ></v-textarea>
      <v-btn
