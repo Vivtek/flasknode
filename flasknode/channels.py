@@ -8,7 +8,7 @@ def on_join(data):
    room = data['topic']
    print('connecting to topic ' + room)
    join_room(room)
-
+   
 @socketio.on('hello_world')
 def on_hello_world(data):
    print ("hello world")
