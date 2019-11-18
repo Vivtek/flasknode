@@ -15,7 +15,6 @@
     </v-card>
     <v-spacer></v-spacer>
    </div>
-   <button @click="emit_event">emit</button>
   </v-flex>
  </v-layout>
 </template>
@@ -50,14 +49,10 @@ export default {
   sockets: {
     connect: function () {},
     feed: function (data) {
-       this.messages.push (data)
+       this.messages.unshift (data)
     }
   },
   methods: {
-     emit_event () {
-        this.$socket.emit('hello_world', {data: 'hi'});
-        this.do_alert('sent hello_world')
-     },
      do_alert (message) {
         this.alert_message = message
         this.alert='info'
