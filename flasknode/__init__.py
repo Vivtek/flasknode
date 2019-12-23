@@ -1,6 +1,17 @@
+import configparser
+import os, sys
+from flasknode import subnet
 from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
+
+config = configparser.ConfigParser()
+configfile = os.path.normpath (os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), 'setup.conf'))
+config.read(configfile)
+
+my_ip = subnet.get_ip()
+print ("Starting on IP: %s" % (my_ip))
+
 app = Flask(__name__,
             static_folder = "static")
 CORS(app)
