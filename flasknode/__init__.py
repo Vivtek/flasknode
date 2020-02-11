@@ -16,6 +16,11 @@ app = Flask(__name__,
             static_folder = "static")
 CORS(app)
 
+app.my_ip = my_ip
+app.fnconfig = config
+
+subnet.start_subnet_maintenance(app)
+
 socketio = SocketIO(app, cors_allowed_origins=['http://localhost:8080','http://127.0.0.1:8080'])
 # Note on cors_allowed_origins: https://stackoverflow.com/questions/29187933/flask-socketio-cors
 
