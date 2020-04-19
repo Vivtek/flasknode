@@ -2,6 +2,7 @@ from flasknode import app
 import sqlite3
 import os
 from flask import g
+import uuid
 
 def db_path():
    return os.path.join (app.instance_path, 'local_node.sqlt')
@@ -13,13 +14,18 @@ def get_db():
       exists = os.path.exists(database);
       db = g._database = sqlite3.connect(database)
       if not exists:
-         cur = db.cursor()
-         with app.open_resource('schema.sql', mode='r') as f:
-            cur.executescript(f.read())
-         cur.execute('insert into client(client_id, version) values (0, 0.1)')
-         db.commit()
+         create_db(db)
    db.row_factory = sqlite3.Row
    return db
+   
+def create_db(db):
+   cur = db.cursor()
+   with app.open_resource('schema.sql', mode='r') as f:
+      cur.executescript(f.read())
+   node_id = uuid.uuid4()
+   cur.execute('insert into client(client_id, version, node_id) values (0, ?, ?)', (0.1, str(node_id)))
+   db.commit()
+
 
 @app.teardown_appcontext
 def close_connection(exception):

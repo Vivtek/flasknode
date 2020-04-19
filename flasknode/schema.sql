@@ -21,6 +21,7 @@ CREATE TABLE message (
   message_id INTEGER PRIMARY KEY NOT NULL,
   parent text,
   node_id text,
+  node_msg_id int,
   user_id text,
   type_id text,
   subject text,

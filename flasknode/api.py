@@ -6,6 +6,7 @@ from flask import request
 def json_client():
    client = db.query('select * from client limit 1', one=True)
    return jsonify(
+      node=client['node_id'],
       version=client['version']
    )
 
