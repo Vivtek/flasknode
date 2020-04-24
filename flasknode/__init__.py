@@ -18,6 +18,7 @@ CORS(app)
 
 app.my_ip = my_ip
 app.fnconfig = config
+app.this_node = '_unknown_node_'
 
 subnet.start_subnet_maintenance(app)
 

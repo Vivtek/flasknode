@@ -15,6 +15,8 @@ def get_db():
       db = g._database = sqlite3.connect(database)
       if not exists:
          create_db(db)
+      node_result = query('select node_id from client limit 1', one=True)
+      app.this_node = node_result['node_id']
    db.row_factory = sqlite3.Row
    return db
    
