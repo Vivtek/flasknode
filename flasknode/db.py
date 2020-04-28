@@ -41,10 +41,18 @@ def query (query, args=(), one=False):
    cur.close()
    return (rv[0] if rv else None) if one else rv
 
-def insert (sql, args):
+def insert (sql, args=()):
    db = get_db()
    cur = db.cursor()
    cur.execute (sql, args)
    db.commit()
    cur.close()
    return cur.lastrowid
+   
+def do (sql, args=()):
+   db = get_db()
+   cur = db.cursor()
+   cur.execute (sql, args)
+   db.commit()
+   cur.close()
+   

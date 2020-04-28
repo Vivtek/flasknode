@@ -41,6 +41,13 @@ def message_list():
    messages = db.query ('select * from message order by create_date desc limit 20')
    return jsonify ([{'id':message['message_id'], 'subject':message['subject'], 'date':message['create_date'], 'message':message['message']} for message in messages])
    
+# This is only for testing; should be actively deleted from production versions.
+@app.route('/message/zero', methods=['GET', 'POST'])
+def message_zero():
+   print ("Zeroing database\n")
+   model.zero_messages()
+   return 'ok'
+   
 @app.route('/comment/post', methods=['POST'])
 def comment_new():
    # Note: error handling with request.is_json?

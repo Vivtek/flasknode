@@ -18,6 +18,9 @@ def get_curver():
 def new_message(subject, message):
    row = db.insert ('insert into message (user_id, subject, message, create_date) values (0, ?, ?, CURRENT_TIMESTAMP)', (subject, message))
    socketio.emit('feed', get_message(row), room='feed', json=True)
+   
+def zero_messages():
+   ret = db.do ('delete from message')
 
 def get_message(msgid):
    def extract(row):
