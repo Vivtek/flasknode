@@ -11,7 +11,7 @@ def get_db():
    db = getattr(g, '_database', None)
    if db is None:
       database = db_path()
-      exists = os.path.exists(database);
+      exists = os.path.exists(database)
       db = g._database = sqlite3.connect(database)
       if not exists:
          create_db(db)
