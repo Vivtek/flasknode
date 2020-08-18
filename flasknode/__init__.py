@@ -29,3 +29,4 @@ socketio = SocketIO(app, cors_allowed_origins=['http://localhost:8080','http://1
 from flasknode import api
 from flasknode import static_files
 from flasknode import channels
+from flasknode import ui

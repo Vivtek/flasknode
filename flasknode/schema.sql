@@ -20,9 +20,9 @@ CREATE TABLE client (
 CREATE TABLE message (
   message_id INTEGER PRIMARY KEY NOT NULL,
   parent text,
-  node_id text,
+  node_id text default '',
   node_msg_id int,
-  user_id text,
+  user_id int default 0,
   type_id text,
   subject text,
   message text,
@@ -54,10 +54,13 @@ CREATE TABLE nodes (
 --
 CREATE TABLE user (
   user_id INTEGER PRIMARY KEY NOT NULL,
+  node_id text,
+  ext_user_id int,
   user_handle text,
   password text,
   create_date timestamp
 );
+insert into user (user_id, user_handle) values (1, '');
 
 COMMIT;
 

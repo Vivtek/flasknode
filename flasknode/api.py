@@ -9,6 +9,7 @@ def json_client():
    return jsonify(
       node=client['node_id'],
       cur=curver,
+      nickname=client['nickname'],
       version=client['version']
    )
    
@@ -38,8 +39,9 @@ def message_new():
    
 @app.route('/message/list')
 def message_list():
-   messages = db.query ('select * from message order by create_date desc limit 20')
-   return jsonify ([{'id':message['message_id'], 'subject':message['subject'], 'date':message['create_date'], 'message':message['message']} for message in messages])
+   #messages = db.query ('select * from message order by create_date desc limit 20')
+   #return jsonify ([{'id':message['message_id'], 'subject':message['subject'], 'date':message['create_date'], 'message':message['message']} for message in messages])
+   return jsonify (model.get_messages(20))
    
 # This is only for testing; should be actively deleted from production versions.
 @app.route('/message/zero', methods=['GET', 'POST'])
