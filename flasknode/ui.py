@@ -1,6 +1,7 @@
 # Clunky old-school UI for old-school dinosaur developers
 from flasknode import app, db, model
 from flask import request, redirect
+import requests
 
 @app.route('/status')
 def status():
@@ -101,4 +102,56 @@ def ui_message_show():
 def ui_comment_post():
    id = model.new_comment(request.form['parent'], request.form['subject'], request.form['message'])
    return redirect('/ui/messages/m?id=%s' % request.form['parent'])
+
+
+@app.route('/ui/sessions')
+def ui_sessions():
+   def enlist (session):
+      if message['nickname'] == '':
+         return '<li>%s</li>' % (message['node'],)
+      else:
+         return '<li>%s (%s)</li>' % (message['nickname'], message['node'])
+   s = model.get_sessions()
+   form = """
+      <form action="/ui/sessions/connect" method="post">
+      <label for="ip">IP address:</label> <input type="text" id="ip" name="ip"><br/>
+      <label for="port">Port:</label> <input type="text" id="port" name="port" value="5000"><br/>
+      <input type="submit" value="Connect">
+      </form>
+   """
+   if len(s):
+      return """
+         <ul>
+         %s
+         </ul>
+         %s
+      """ % ("<br/>".join(map(enlist, s)),form)
+   else:
+      return "No remote sessions on node<br/>%s" % (form,)
+
+@app.route('/ui/sessions/connect', methods=['POST'])
+def ui_session_connect():
+   ip   = request.form['ip']
+   port = request.form['port']
+
+   client = model.get_client()
+   curver = model.get_curver()
+   
+   post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version']}
+   r = requests.post("http://%s:%s/hello" % (ip,port), json=post)
+   print (r.text)
+   
+   return redirect('/ui/sessions/s?id=%s' % (1,))
+
+@app.route('/ui/sessions/s', methods=['GET'])
+def ui_session_show():
+   s = model.get_session(request.args.get('id', ''))
+
+   return """
+     [ <a href="/ui/sessions">back</a> ]
+     <table>
+     <tr><td>Session ID:</td><td>%s</td></tr>
+     </table>
+     <br/>
+   """ % (s['id'],)
 

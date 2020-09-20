@@ -83,3 +83,19 @@ def get_updates(from_id):
    """
    return list(map (extract, db.query (query, (from_id,from_id))))
 
+def get_sessions():
+   def extract(row):
+      return {'node':row['node'], 'nickname':row['nickname'], 'session':row['session'], 'their_session':row['their_session']}
+   messages = db.query ("""
+    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session
+           from  session s left join nodes n on s.node_id = n.node_id
+   """)
+   return list(map (extract, messages))
+
+def new_session():
+   row = db.insert ('insert into message (user_id, subject, message, create_date) values (1, ?, ?, CURRENT_TIMESTAMP)', (subject, message))
+   return row
+
+def get_session(sessid):
+   return {'id':sessid}
+
