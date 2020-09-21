@@ -92,20 +92,23 @@ def get_sessions():
    """)
    return list(map (extract, messages))
 
-def verify_session(node):
-   srec = db.query('select session_id from session where node_id=?', (node,), one=True)
-   if srec['session_id'] == None:
-      session = db.insert ('insert into session (node_id, started) values (?, CURRENT_TIMESTAMP)', (node,))
-      return row
-   return srec['session_id']
+def verify_session(node, ip, port):
+   srec = db.query('select session_id, ip, port from session where node_id=?', (node,), one=True)
+   if srec != None:
+      if srec['ip'] != ip or srec['port'] != port:
+         db.do('delete from session where session_id=?', (srec['session_id'],))
+         srec = None
+      return srec['session_id']
+   session = db.insert ('insert into session (node_id, ip, port, started) values (?, ?, ?, CURRENT_TIMESTAMP)', (node, ip, port))
+   return session
 
 def get_session(sessid):
    return db.query('select * from session where session_id=?', (sessid,), one=True)
 
 
 def verify_node(node, nickname, cur):
-   node = db.query('select node_id, nickname, latest from nodes where node_id=?', (node,), one=True)
-   if node['node_id'] == None:
+   nrec = db.query('select node_id, nickname, latest from nodes where node_id=?', (node,), one=True)
+   if nrec == None:
       db.insert ('insert into nodes (node_id, nickname, latest) values (?, ?, ?)', (node, nickname, cur))
    else:
       db.do ('update nodes set latest=? where node=?', (cur, node))

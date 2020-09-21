@@ -107,10 +107,10 @@ def ui_comment_post():
 @app.route('/ui/sessions')
 def ui_sessions():
    def enlist (session):
-      if message['nickname'] == '':
-         return '<li>%s</li>' % (message['node'],)
+      if session['nickname'] == None:
+         return '<li>%s</li>' % (session['node'],)
       else:
-         return '<li>%s (%s)</li>' % (message['nickname'], message['node'])
+         return '<li>%s (%s)</li>' % (session['nickname'], session['node'])
    s = model.get_sessions()
    form = """
       <form action="/ui/sessions/connect" method="post">
@@ -141,15 +141,16 @@ def ui_session_connect():
    # So we've confirmed this is the right IP/port; let's add a session
    # - add/check the nodes table 
    node = r.json()
-   model.verify_node (node['node_id'], node['nickname'], node['cur']);
-   model.update_swarm (node['node_id'], ip, port)
-   session = model.verify_session (node['node_id'])
+   print (node)
+   model.verify_node (node['node'], node['nickname'], node['cur']);
+   model.update_swarm (node['node'], ip, port)
+   session = model.verify_session (node['node'], ip, port)
    
    post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':['session']}
    r = requests.post("http://%s:%s/hello" % (ip,port), json=post)
    print (r.text)
    
-   return redirect('/ui/sessions/s?id=%s' % (1,))
+   return redirect('/ui/sessions/s?id=%s' % (session,))
 
 @app.route('/ui/sessions/s', methods=['GET'])
 def ui_session_show():
@@ -161,5 +162,5 @@ def ui_session_show():
      <tr><td>Session ID:</td><td>%s</td></tr>
      </table>
      <br/>
-   """ % (s['id'],)
+   """ % (s['session_id'],)
 

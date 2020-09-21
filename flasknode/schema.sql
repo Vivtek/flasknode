@@ -62,8 +62,8 @@ CREATE TABLE session (
   node_id text,
   their_session int,
   started timestamp,
-  our_cur int,
-  their_cur int
+  ip text,  --- current IP/port combination for this session
+  port int
 );
 
 --
