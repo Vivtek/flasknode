@@ -145,7 +145,7 @@ def ui_session_connect():
    model.update_swarm (node['node'], ip, port)
    session = model.verify_session (node['node'], ip, port)
    
-   post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':session}
+   post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':session, 'ip':app.my_ip, 'port':5000}
    r = requests.post("http://%s:%s/hello" % (ip,port), json=post)
    print (r.text)
    
