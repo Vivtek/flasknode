@@ -137,7 +137,15 @@ def ui_session_connect():
    client = model.get_client()
    curver = model.get_curver()
    
-   post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version']}
+   r = requests.get("http://%s:%s/client" % (ip,port))
+   # So we've confirmed this is the right IP/port; let's add a session
+   # - add/check the nodes table 
+   node = r.json()
+   model.verify_node (node['node_id'], node['nickname'], node['cur']);
+   model.update_swarm (node['node_id'], ip, port)
+   session = model.verify_session (node['node_id'])
+   
+   post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':['session']}
    r = requests.post("http://%s:%s/hello" % (ip,port), json=post)
    print (r.text)
    

@@ -39,7 +39,7 @@ CREATE TABLE message (
 CREATE TABLE nodes (
   node_id text,
   nickname text,
-  latest text
+  latest int
 );
 
 --
@@ -50,8 +50,7 @@ CREATE TABLE swarm (
   ip text,
   port int,
   node_id text,
-  last_contact timestamp,
-  current int
+  last_contact timestamp
 );
 
 --
@@ -59,7 +58,7 @@ CREATE TABLE swarm (
 -- Currently active sessions between us and other nodes.
 --
 CREATE TABLE session (
-  session_id int,
+  session_id INTEGER PRIMARY KEY NOT NULL,
   node_id text,
   their_session int,
   started timestamp,

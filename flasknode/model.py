@@ -92,10 +92,27 @@ def get_sessions():
    """)
    return list(map (extract, messages))
 
-def new_session():
-   row = db.insert ('insert into message (user_id, subject, message, create_date) values (1, ?, ?, CURRENT_TIMESTAMP)', (subject, message))
-   return row
+def verify_session(node):
+   srec = db.query('select session_id from session where node_id=?', (node,), one=True)
+   if srec['session_id'] == None:
+      session = db.insert ('insert into session (node_id, started) values (?, CURRENT_TIMESTAMP)', (node,))
+      return row
+   return srec['session_id']
 
 def get_session(sessid):
-   return {'id':sessid}
+   return db.query('select * from session where session_id=?', (sessid,), one=True)
+
+
+def verify_node(node, nickname, cur):
+   node = db.query('select node_id, nickname, latest from nodes where node_id=?', (node,), one=True)
+   if node['node_id'] == None:
+      db.insert ('insert into nodes (node_id, nickname, latest) values (?, ?, ?)', (node, nickname, cur))
+   else:
+      db.do ('update nodes set latest=? where node=?', (cur, node))
+   return 1
+   
+def update_swarm(node, ip, port):
+   db.do ('delete from swarm where ip=? and port=?', (ip, port))
+   db.insert ('insert into swarm (ip, port, node_id, last_contact) values (?, ?, ?, CURRENT_TIMESTAMP)', (ip, port, node))
+
 
