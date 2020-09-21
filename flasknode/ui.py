@@ -147,7 +147,8 @@ def ui_session_connect():
    
    post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':session, 'ip':app.my_ip, 'port':5000}
    r = requests.post("http://%s:%s/hello" % (ip,port), json=post)
-   print (r.text)
+   response = r.json()
+   model.update_session (session, response['session'])
    
    return redirect('/ui/sessions/s?id=%s' % (session,))
 

@@ -21,6 +21,7 @@ def hello():
    model.verify_node (hello['node'], hello['nickname'], hello['curver']);
    model.update_swarm (hello['node'], hello['ip'], hello['port'])
    session = model.verify_session (hello['node'], hello['ip'], hello['port'])
+   model.update_session (session, hello['session'])
    
    post = {'node':client['node_id'], 'nickname':client['nickname'], 'cur':curver, 'version':client['version'], 'session':session}
 

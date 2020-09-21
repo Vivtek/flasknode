@@ -105,6 +105,9 @@ def verify_session(node, ip, port):
 
 def get_session(sessid):
    return db.query('select * from session where session_id=?', (sessid,), one=True)
+   
+def update_session(sessid, their_session):
+   db.do ('update session set their_session=? where session_id=?', (their_session, sessid))
 
 
 def verify_node(node, nickname, cur):
