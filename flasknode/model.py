@@ -98,7 +98,8 @@ def verify_session(node, ip, port):
       if srec['ip'] != ip or srec['port'] != port:
          db.do('delete from session where session_id=?', (srec['session_id'],))
          srec = None
-      return srec['session_id']
+      else:
+         return srec['session_id']
    session = db.insert ('insert into session (node_id, ip, port, started) values (?, ?, ?, CURRENT_TIMESTAMP)', (node, ip, port))
    return session
 
@@ -111,7 +112,7 @@ def verify_node(node, nickname, cur):
    if nrec == None:
       db.insert ('insert into nodes (node_id, nickname, latest) values (?, ?, ?)', (node, nickname, cur))
    else:
-      db.do ('update nodes set latest=? where node=?', (cur, node))
+      db.do ('update nodes set latest=? where node_id=?', (cur, node))
    return 1
    
 def update_swarm(node, ip, port):
