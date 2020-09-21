@@ -16,24 +16,15 @@ def json_client():
 @app.route('/hello', methods=['GET', 'POST'])
 def hello():
    hello = request.get_json()
-   print (hello)
    client = model.get_client()
    curver = model.get_curver()
-   #r = requests.get("http://%s:%s/client" % (ip,port))
-   # So we've confirmed this is the right IP/port; let's add a session
-   # - add/check the nodes table 
-   #node = r.json()
-   #model.verify_node (node['node'], node['nickname'], node['cur']);
-   #model.update_swarm (node['node'], ip, port)
-   #session = model.verify_session (node['node'], ip, port)
+   model.verify_node (hello['node'], hello['nickname'], hello['curver']);
+   model.update_swarm (hello['node'], hello['ip'], hello['port'])
+   session = model.verify_session (hello['node'], hello['ip'], hello['port'])
    
-   #post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':['session']}
+   post = {'node':client['node_id'], 'nickname':client['nickname'], 'cur':curver, 'version':client['version'], 'session':session}
 
-   return jsonify(
-      node=client['node_id'],
-      cur=curver,
-      version=client['version']
-   )
+   return jsonify(post)
 
 @app.route('/message')
 def message_get():
