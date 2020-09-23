@@ -1,12 +1,17 @@
 # Clunky old-school UI for old-school dinosaur developers
-from flasknode import app, db, model
+from flasknode import app, db, model, api
 from flask import request, redirect
 import requests
 
+# ---------------------------------------------------------------------------------------------------
+# Status and settings
+# ---------------------------------------------------------------------------------------------------
+
+# UI /status = API /client
 @app.route('/status')
 def status():
-   client = model.get_client()
-   curver = model.get_curver()
+   client = api.get_client()
+   #print ([client[x] for x in ['node', 'cur', 'nickname', 'version']])
    return """
       <table>
       <tr><td>Node:</td><td>%s</td></td>
@@ -15,12 +20,14 @@ def status():
       <tr><td>Version:</td><td>%s</td></tr>
       </table>
       
-      <a href="/ui/messages">Messages</a>
-   """ % (client['node_id'], curver, client['nickname'], client['version'])
-   
+      <a href="/ui/messages">Messages</a> (%s)<br>
+      <a href="/ui/sessions">Sessions</a>
+   """ % tuple([client[x] for x in ['node', 'cur', 'nickname', 'version', 'messages']])
+
+# UI settings/edit -> missing in API (because it's just the setup for the posting screen)
 @app.route('/ui/settings/edit')
 def ui_settings_editor():
-   client = model.get_client()
+   client = api.get_client()
    return """
       <form action="/ui/settings/update" method="post">
       <label for="nickname">Nickname:</label> <input type="text" id="nickname" name="nickname" value="%s"><br/>
@@ -28,12 +35,17 @@ def ui_settings_editor():
       </form>
    """ % client['nickname']
 
+# UI settings/update -> missing in API (and needs to be added)
 @app.route('/ui/settings/update', methods=['POST'])
 def ui_settings_update():
    id = model.set_nickname(request.form['nickname'])
    return redirect('/status')
 
-   
+# ---------------------------------------------------------------------------------------------------
+# Messages
+# ---------------------------------------------------------------------------------------------------
+
+# UI messages = API /message/list
 @app.route('/ui/messages')
 def ui_messages():
    def enlist (message):
@@ -42,7 +54,7 @@ def ui_messages():
       else:
          count = ""
       return '<li>%s (%s) - <a href="/ui/messages/m?id=%s">%s</a>%s</li>' % (message['user'], message['date'], message['id'], message['subject'], count)
-   m = model.get_messages()
+   m = api.message_list()
    form = """
       <form action="/ui/messages/post" method="post">
       <label for="subject">Subject:</label> <input type="text" id="subject" name="subject"><br/>
@@ -60,16 +72,17 @@ def ui_messages():
    else:
       return "No messages on node<br/>%s" % (form,)
 
+# UI messages/post = API /message/post
 @app.route('/ui/messages/post', methods=['POST'])
 def ui_message_post():
-   id = model.new_message(request.form['subject'], request.form['message'])
+   id = api.message_post (request.form['subject'], request.form['message'])
    return redirect('/ui/messages/m?id=%s' % id)
 
 
-
+# UI messages/m = API /message
 @app.route('/ui/messages/m', methods=['GET'])
 def ui_message_show():
-   m = model.get_message(request.args.get('id', ''))
+   m = api.get_message(request.args.get('id', ''))
    def enlist (comment):
       return '<li>%s (%s)<br/>%s</li>' % (comment['user'], comment ['date'], comment['message'])
    form = """
@@ -98,20 +111,29 @@ def ui_message_show():
      %s
    """ % (m['id'], m['date'], m['user'], m['subject'], m['message'], "<br/>".join(map(enlist, m['comments'])), form)
 
+# ---------------------------------------------------------------------------------------------------
+# Comments (reading happens with the messages; this is just posting)
+# ---------------------------------------------------------------------------------------------------
+
+# UI messages/comment = API /comment/post
 @app.route('/ui/messages/comment', methods=['POST'])
 def ui_comment_post():
-   id = model.new_comment(request.form['parent'], request.form['subject'], request.form['message'])
+   id = api.comment_post (request.form['parent'], request.form['subject'], request.form['message'])
    return redirect('/ui/messages/m?id=%s' % request.form['parent'])
 
+# ---------------------------------------------------------------------------------------------------
+# Sessions
+# ---------------------------------------------------------------------------------------------------
 
+# UI sessions = API /session/list
 @app.route('/ui/sessions')
 def ui_sessions():
    def enlist (session):
       if session['nickname'] == None:
-         return '<li>%s</li>' % (session['node'],)
+         return '<li>[<a href="/ui/sessions/s?id=%s">?</a>] %s</li>' % (session['session'], session['node'])
       else:
-         return '<li>%s (%s)</li>' % (session['nickname'], session['node'])
-   s = model.get_sessions()
+         return '<li>[<a href="/ui/sessions/s?id=%s">?</a>] %s (%s)</li>' % (session['session'], session['nickname'], session['node'])
+   s = api.get_sessions()
    form = """
       <form action="/ui/sessions/connect" method="post">
       <label for="ip">IP address:</label> <input type="text" id="ip" name="ip"><br/>
@@ -129,38 +151,27 @@ def ui_sessions():
    else:
       return "No remote sessions on node<br/>%s" % (form,)
 
-@app.route('/ui/sessions/connect', methods=['POST'])
-def ui_session_connect():
-   ip   = request.form['ip']
-   port = request.form['port']
-
-   client = model.get_client()
-   curver = model.get_curver()
-   
-   r = requests.get("http://%s:%s/client" % (ip,port))
-   # So we've confirmed this is the right IP/port; let's add a session
-   # - add/check the nodes table 
-   node = r.json()
-   model.verify_node (node['node'], node['nickname'], node['cur']);
-   model.update_swarm (node['node'], ip, port)
-   session = model.verify_session (node['node'], ip, port)
-   
-   post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':session, 'ip':app.my_ip, 'port':5000}
-   r = requests.post("http://%s:%s/hello" % (ip,port), json=post)
-   response = r.json()
-   model.update_session (session, response['session'])
-   
-   return redirect('/ui/sessions/s?id=%s' % (session,))
-
+# UI sessions/s = API session
 @app.route('/ui/sessions/s', methods=['GET'])
 def ui_session_show():
-   s = model.get_session(request.args.get('id', ''))
+   s = api.get_session(request.args.get('id', ''))
 
    return """
      [ <a href="/ui/sessions">back</a> ]
      <table>
      <tr><td>Session ID:</td><td>%s</td></tr>
+     <tr><td>Node:</td><td>%s</td></tr>
+     <tr><td>Nickname:</td><td>%s</td></tr>
+     <tr><td>IP:</td><td>%s:%s</td></tr>
      </table>
      <br/>
-   """ % (s['session_id'],)
+   """ % tuple([s[x] for x in ['session', 'node', 'nickname', 'ip', 'port']])
+
+# UI sessions/connect = API /session/connect
+@app.route('/ui/sessions/connect', methods=['POST'])
+def ui_session_connect():
+   session = api.session_connect (request.form['ip'], request.form['port'])
+   
+   return redirect('/ui/sessions/s?id=%s' % (session,))
+
 

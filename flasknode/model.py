@@ -4,7 +4,14 @@ from flasknode import socketio
 def get_client():
    user = db.query ('select user_handle from user where user_id=1', one=True)
    client = db.query ('select * from client limit 1', one=True)
-   return {'client_id':client['client_id'], 'node_id':client['node_id'], 'version':client['version'], 'nickname':user['user_handle']}
+   messages = db.query ('select count(*) as c from message', one=True)
+   return {
+      'client_id': client['client_id'],
+      'node_id':   client['node_id'],
+      'version':   client['version'],
+      'nickname':  user['user_handle'],
+      'messages':  messages['c']
+   }
    
 def set_nickname(nickname):
    db.do ('update user set user_handle=? where user_id=1', (nickname,))
@@ -84,13 +91,34 @@ def get_updates(from_id):
    return list(map (extract, db.query (query, (from_id,from_id))))
 
 def get_sessions():
-   def extract(row):
-      return {'node':row['node'], 'nickname':row['nickname'], 'session':row['session'], 'their_session':row['their_session']}
-   messages = db.query ("""
-    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session
+   sessions = db.query ("""
+    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session, s.ip, s.port
            from  session s left join nodes n on s.node_id = n.node_id
    """)
-   return list(map (extract, messages))
+   def extract(row):
+      return {
+         'node':          row['node'],
+         'nickname':      row['nickname'],
+         'session':       row['session'],
+         'their_session': row['their_session'],
+         'ip':            row['ip'],
+         'port':          row['port']
+      }
+   return list(map (extract, sessions))
+
+def get_session(sessid):
+   session = db.query ("""
+    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session, s.ip, s.port
+           from  session s left join nodes n on s.node_id = n.node_id
+          where  session=?
+   """, (sessid,), one=True)
+   return {
+      'session':  session['session'],
+      'node':     session['node'],
+      'nickname': session['nickname'],
+      'ip':       session['ip'],
+      'port':     session['port']
+   }
 
 def verify_session(node, ip, port):
    srec = db.query('select session_id, ip, port from session where node_id=?', (node,), one=True)
@@ -103,8 +131,6 @@ def verify_session(node, ip, port):
    session = db.insert ('insert into session (node_id, ip, port, started) values (?, ?, ?, CURRENT_TIMESTAMP)', (node, ip, port))
    return session
 
-def get_session(sessid):
-   return db.query('select * from session where session_id=?', (sessid,), one=True)
    
 def update_session(sessid, their_session):
    db.do ('update session set their_session=? where session_id=?', (their_session, sessid))
