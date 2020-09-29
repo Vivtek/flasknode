@@ -70,8 +70,10 @@ def get_message(msgid):
             'date':message['date'], 'message':message['message'], 'comments':comments
            }
    
-def new_comment(parent, subject, message):
-   row = db.insert ('insert into message (user_id, parent, subject, message, create_date) values (1, ?, ?, ?, CURRENT_TIMESTAMP)', (parent, subject, message))
+def new_comment(parent, subject, message, user=1):
+   if user == None:
+      user = 1
+   row = db.insert ('insert into message (user_id, parent, subject, message, create_date) values (?, ?, ?, ?, CURRENT_TIMESTAMP)', (user, parent, subject, message))
    #socketio.emit('feed', get_message(row), room='feed', json=True)
    return row
 
@@ -117,7 +119,8 @@ def get_session(sessid):
       'node':     session['node'],
       'nickname': session['nickname'],
       'ip':       session['ip'],
-      'port':     session['port']
+      'port':     session['port'],
+      'their':    session['their_session']
    }
 
 def verify_session(node, ip, port):

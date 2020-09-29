@@ -1,7 +1,6 @@
 # Clunky old-school UI for old-school dinosaur developers
 from flasknode import app, db, model, api
 from flask import request, redirect
-import requests
 
 # ---------------------------------------------------------------------------------------------------
 # Status and settings
@@ -48,13 +47,21 @@ def ui_settings_update():
 # UI messages = API /message/list
 @app.route('/ui/messages')
 def ui_messages():
+   s = request.args.get('s', None)
+   m = api.message_list(server=s)
+   heading = ''
+   tracer = ''
+   if s != None:
+      server = model.get_session (s)
+      heading = "Messages on '%s' (session %s):<br>" % (server['nickname'], s)
+      tracer = '&s=%s' % s
+
    def enlist (message):
       if message['comments'] > 0:
          count = " (%d)" % message['comments']
       else:
          count = ""
-      return '<li>%s (%s) - <a href="/ui/messages/m?id=%s">%s</a>%s</li>' % (message['user'], message['date'], message['id'], message['subject'], count)
-   m = api.message_list()
+      return '<li>%s (%s) - <a href="/ui/messages/m?id=%s%s">%s</a>%s</li>' % (message['user'], message['date'], message['id'], tracer, message['subject'], count)
    form = """
       <form action="/ui/messages/post" method="post">
       <label for="subject">Subject:</label> <input type="text" id="subject" name="subject"><br/>
@@ -64,13 +71,14 @@ def ui_messages():
    """
    if len(m):
       return """
+         %s
          <ul>
          %s
          </ul>
          %s
-      """ % ("<br/>".join(map(enlist, m)),form)
+      """ % (heading, "<br/>".join(map(enlist, m)), form)
    else:
-      return "No messages on node<br/>%s" % (form,)
+      return "%s No messages on node<br/>%s" % (heading, form)
 
 # UI messages/post = API /message/post
 @app.route('/ui/messages/post', methods=['POST'])
@@ -82,21 +90,36 @@ def ui_message_post():
 # UI messages/m = API /message
 @app.route('/ui/messages/m', methods=['GET'])
 def ui_message_show():
-   m = api.get_message(request.args.get('id', ''))
+   s = request.args.get('s', None)
+   m = api.get_message(request.args.get('id', ''), server=s)
+   heading = ''
+   tracer1 = ''
+   tracer2 = ''
+   post_s = ''
+   if s != None:
+      server = model.get_session (s)
+      heading = "<tr><td>Message on:</td><td>'%s' (session %s)</td></tr>" % (server['nickname'], s)
+      tracer1 = '&s=%s' % s
+      tracer2 = '?s=%s' % s
+      post_s = '<input type="hidden" id="s" name="s" value="%s">' % s
+   
+   
    def enlist (comment):
       return '<li>%s (%s)<br/>%s</li>' % (comment['user'], comment ['date'], comment['message'])
    form = """
       <form action="/ui/messages/comment" method="post">
+      %s
       <input type="hidden" id="parent" name="parent" value="%s">
-      <input type="hidden" id="subject" name="subject" value=""><br/>
+      <input type="hidden" id="subject" name="subject" value="">
       <textarea id="message" name="message" rows="3" cols="80"></textarea><br/>
       <input type="submit" value="Comment">
       </form>
-   """ % (m['id'],)
-
+   """ % (post_s, m['id'])
+   
    return """
-     [ <a href="/ui/messages">back</a> ]
+     [ <a href="/ui/messages%s">back</a> ]
      <table>
+     %s
      <tr><td>Message ID:</td><td>%s</td></tr>
      <tr><td>Posted:</td><td>%s</td></tr>
      <tr><td>By:</td><td>%s</td></tr>
@@ -109,7 +132,7 @@ def ui_message_show():
      </ul>
      <br/>
      %s
-   """ % (m['id'], m['date'], m['user'], m['subject'], m['message'], "<br/>".join(map(enlist, m['comments'])), form)
+   """ % (tracer2, heading, m['id'], m['date'], m['user'], m['subject'], m['message'], "<br/>".join(map(enlist, m['comments'])), form)
 
 # ---------------------------------------------------------------------------------------------------
 # Comments (reading happens with the messages; this is just posting)
@@ -118,8 +141,13 @@ def ui_message_show():
 # UI messages/comment = API /comment/post
 @app.route('/ui/messages/comment', methods=['POST'])
 def ui_comment_post():
-   id = api.comment_post (request.form['parent'], request.form['subject'], request.form['message'])
-   return redirect('/ui/messages/m?id=%s' % request.form['parent'])
+   s = request.form.get('s', None)
+   tracer = ''
+   if s != None:
+      tracer = '&s=%s' % s
+      
+   id = api.comment_post (request.form['parent'], request.form['subject'], request.form['message'], server=s)
+   return redirect('/ui/messages/m?id=%s%s' % (request.form['parent'], tracer))
 
 # ---------------------------------------------------------------------------------------------------
 # Sessions
@@ -165,7 +193,8 @@ def ui_session_show():
      <tr><td>IP:</td><td>%s:%s</td></tr>
      </table>
      <br/>
-   """ % tuple([s[x] for x in ['session', 'node', 'nickname', 'ip', 'port']])
+     <a href="/ui/messages?s=%s">See feed</a>
+   """ % tuple([s[x] for x in ['session', 'node', 'nickname', 'ip', 'port', 'session']])
 
 # UI sessions/connect = API /session/connect
 @app.route('/ui/sessions/connect', methods=['POST'])

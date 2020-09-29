@@ -1,6 +1,7 @@
 from flasknode import app, db, model
 from flask import jsonify
 from flask import request
+import requests
 
 # ---------------------------------------------------------------------------------------------------
 # Status and handshake
@@ -56,32 +57,36 @@ def updates():
 @app.route('/message/list')
 def api_message_list():
    return jsonify (message_list())
-def message_list(last=20):
-   return model.get_messages(last)
+def message_list(last=20, server=None):
+   if (server == None):
+      return model.get_messages(last)
+   return remote_api (server, 'g', '/message/list', {})
    
 # UI messages/m = API /message
 @app.route('/message')
 def message_get():
    return jsonify (get_message(request.args['id']))
-def get_message (message_id):
-   return model.get_message (message_id)
+def get_message (message_id, server=None):
+   if (server == None):
+      return model.get_message (message_id)
+   return remote_api (server, 'g', '/message', {'id':message_id})
 
 # UI messages/post = API /message/post
 @app.route('/message/post', methods=['POST'])
 def api_message_post():
    content = request.get_json()
    message_post(content['subject'], content['message']);
-   return 'ok'
+   return jsonify({'ok':'ok'})
 def message_post(subject, message):
    return model.new_message(subject, message)
 
 # API /message/zero -> not exposed in UI   
 # This is only for testing; should be actively deleted from production versions.
-@app.route('/message/zero', methods=['GET', 'POST'])
-def message_zero():
-   print ("Zeroing database\n")
-   model.zero_messages()
-   return 'ok'
+#@app.route('/message/zero', methods=['GET', 'POST'])
+#def message_zero():
+#   print ("Zeroing database\n")
+#   model.zero_messages()
+#   return 'ok'
    
    
 # ---------------------------------------------------------------------------------------------------
@@ -93,11 +98,19 @@ def message_zero():
 def api_comment_post():
    # Note: error handling with request.is_json?
    content = request.get_json()
+   user = get_session_user (content)
    comment_post (content['parent'], content['subject'], content['message'])
-   return 'ok'
-def comment_post (parent, subject, message):
-   return model.new_comment(parent, subject, message)
+   return jsonify({'ok':'ok'})
+def comment_post (parent, subject, message, server=None, user=None):
+   if server == None:
+      return model.new_comment(parent, subject, message)
+   return remote_api (server, 'p', '/comment/post', {'parent':parent, 'subject':subject, 'message':message})
 
+def get_session_user (input)
+   user = 1
+   if 'session' in content:
+      pass
+   return user
 
 # ---------------------------------------------------------------------------------------------------
 # Sessions
@@ -122,7 +135,7 @@ def get_session (session_id):
 def api_session_connect():
    content = request.get_json()
    session_connect (content['ip'], content['port'])
-   return 'ok'
+   return jsonify({'ok':'ok'})
 def session_connect (ip, port):
    client = model.get_client()
    curver = model.get_curver()
@@ -141,3 +154,18 @@ def session_connect (ip, port):
    model.update_session (session, response['session'])
    return session
 
+# ---------------------------------------------------------------------------------------------------
+# Calling a remote API
+# ---------------------------------------------------------------------------------------------------
+
+def remote_api (server, post_or_get, api, parms):
+   session = model.get_session (server)
+   url = "http://%s:%s%s" % (session['ip'], session['port'], api)
+   parms['session'] = session['their']
+   
+   if post_or_get == 'p':
+      r = requests.post(url, json=parms)
+   else:
+      r = requests.get(url, params=parms)
+      
+   return r.json()
