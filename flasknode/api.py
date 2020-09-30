@@ -98,19 +98,38 @@ def message_post(subject, message):
 def api_comment_post():
    # Note: error handling with request.is_json?
    content = request.get_json()
-   user = get_session_user (content)
-   comment_post (content['parent'], content['subject'], content['message'])
-   return jsonify({'ok':'ok'})
-def comment_post (parent, subject, message, server=None, user=None):
+   (user, is_new) = get_session_user (content)
+   comment_post (content['parent'], content['subject'], content['message'], user=user)
+   retval = {'ok':'ok'}
+   if is_new:
+      retval['user'] = '?'
+   return jsonify(retval)
+   
+def comment_post (parent, subject, message, server=None, user=1):
    if server == None:
-      return model.new_comment(parent, subject, message)
+      return model.new_comment(parent, subject, message, user)
    return remote_api (server, 'p', '/comment/post', {'parent':parent, 'subject':subject, 'message':message})
 
-def get_session_user (input)
+def get_session_user (content):
    user = 1
+   new_user = False
+   if 'user' in content:
+      user = content['user']
    if 'session' in content:
-      pass
-   return user
+      session = model.get_session(content['session']) # Handle error
+      our_user = model.find_remote_user(session['node'], user)
+      if our_user == None:
+         new_user = True
+         if user == 1: # a remote null user
+            handle = session['nickname']
+         else:
+            handle = 'anon'
+         our_user = model.add_remote_user(session['node'], user, handle)
+         model.rename_user (our_user, 'anon-%s' % our_user)
+         
+      user = our_user
+      
+   return (user, new_user)
 
 # ---------------------------------------------------------------------------------------------------
 # Sessions

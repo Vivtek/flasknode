@@ -1,6 +1,9 @@
 from flasknode import app, db
 from flasknode import socketio
 
+# --------------------------------------------------------------------------------------------------------------
+# Session and status
+# --------------------------------------------------------------------------------------------------------------
 def get_client():
    user = db.query ('select user_handle from user where user_id=1', one=True)
    client = db.query ('select * from client limit 1', one=True)
@@ -27,6 +30,10 @@ def get_curver():
    if cmax['m'] > max['m']:
       return cmax['m']
    return max['m']
+
+# --------------------------------------------------------------------------------------------------------------
+# Messages and comments
+# --------------------------------------------------------------------------------------------------------------
 
 def new_message(subject, message):
    row = db.insert ('insert into message (user_id, subject, message, create_date) values (1, ?, ?, CURRENT_TIMESTAMP)', (subject, message))
@@ -92,6 +99,10 @@ def get_updates(from_id):
    """
    return list(map (extract, db.query (query, (from_id,from_id))))
 
+# --------------------------------------------------------------------------------------------------------------
+# Remote sessions
+# --------------------------------------------------------------------------------------------------------------
+
 def get_sessions():
    sessions = db.query ("""
     select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session, s.ip, s.port
@@ -151,4 +162,21 @@ def update_swarm(node, ip, port):
    db.do ('delete from swarm where ip=? and port=?', (ip, port))
    db.insert ('insert into swarm (ip, port, node_id, last_contact) values (?, ?, ?, CURRENT_TIMESTAMP)', (ip, port, node))
 
+# --------------------------------------------------------------------------------------------------------------
+# Users
+# --------------------------------------------------------------------------------------------------------------
 
+def find_remote_user (node, their_userid):
+   user = db.query ('select user_id from user where node=? and ext_user_id=?', (node, their_userid), one=True)
+   if user == None:
+      return None
+   else:
+      return user['user_id']
+
+
+def add_remote_user (node, their_user_id, handle):
+   return db.insert ('insert into user (node_id, ext_user_id, handle, create_date) values (?, ?, ?, CURRENT_TIMESTAMP)', (node, their_user_id, handle))
+
+def rename_user (userid, handle):
+   db.do ('update user set handle=? where user_id=?', (handle, userid))
+   
