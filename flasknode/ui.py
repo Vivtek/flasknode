@@ -91,7 +91,7 @@ def ui_message_post():
    if s != None:
       tracer = '&s=%s' % s
 
-   id = api.message_post (request.form['subject'], request.form['message'])
+   id = api.message_post (request.form['subject'], request.form['message'], server=s)
    return redirect('/ui/messages/m?id=%s%s' % (id, tracer))
 
 
