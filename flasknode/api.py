@@ -75,10 +75,18 @@ def get_message (message_id, server=None):
 @app.route('/message/post', methods=['POST'])
 def api_message_post():
    content = request.get_json()
-   message_post(content['subject'], content['message']);
-   return jsonify({'ok':'ok'})
-def message_post(subject, message):
-   return model.new_message(subject, message)
+   (user, is_new) = get_session_user (content)
+   message_post (content['subject'], content['message'], user=user)
+   retval = {'ok':'ok'}
+   if is_new:
+      retval['user'] = '?'
+   return jsonify(retval)
+
+def message_post(subject, message, server=None, user=1):
+   if server == None:
+      return model.new_message(subject, message, user=user)
+   return remote_api (server, 'p', '/message/post', {'subject':subject, 'message':message})
+
 
 # API /message/zero -> not exposed in UI   
 # This is only for testing; should be actively deleted from production versions.

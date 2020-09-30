@@ -35,8 +35,8 @@ def get_curver():
 # Messages and comments
 # --------------------------------------------------------------------------------------------------------------
 
-def new_message(subject, message):
-   row = db.insert ('insert into message (user_id, subject, message, create_date) values (1, ?, ?, CURRENT_TIMESTAMP)', (subject, message))
+def new_message(subject, message, user=1):
+   row = db.insert ('insert into message (user_id, subject, message, create_date) values (?, ?, ?, CURRENT_TIMESTAMP)', (user, subject, message))
    socketio.emit('feed', get_message(row), room='feed', json=True)
    return row
    
