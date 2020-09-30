@@ -120,12 +120,11 @@ def get_session_user (content):
       our_user = model.find_remote_user(session['node'], user)
       if our_user == None:
          new_user = True
-         if user == 1: # a remote null user
-            handle = session['nickname']
+         if user == 1: # a remote null user - we know their nickname
+            our_user = model.add_remote_user(session['node'], user, session['nickname'])
          else:
-            handle = 'anon'
-         our_user = model.add_remote_user(session['node'], user, handle)
-         model.rename_user (our_user, 'anon-%s' % our_user)
+            our_user = model.add_remote_user(session['node'], user, 'anon')
+            model.rename_user (our_user, 'anon-%s' % our_user)
          
       user = our_user
       

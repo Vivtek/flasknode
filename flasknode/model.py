@@ -167,7 +167,7 @@ def update_swarm(node, ip, port):
 # --------------------------------------------------------------------------------------------------------------
 
 def find_remote_user (node, their_userid):
-   user = db.query ('select user_id from user where node=? and ext_user_id=?', (node, their_userid), one=True)
+   user = db.query ('select user_id from user where node_id=? and ext_user_id=?', (node, their_userid), one=True)
    if user == None:
       return None
    else:
@@ -175,8 +175,8 @@ def find_remote_user (node, their_userid):
 
 
 def add_remote_user (node, their_user_id, handle):
-   return db.insert ('insert into user (node_id, ext_user_id, handle, create_date) values (?, ?, ?, CURRENT_TIMESTAMP)', (node, their_user_id, handle))
+   return db.insert ('insert into user (node_id, ext_user_id, user_handle, create_date) values (?, ?, ?, CURRENT_TIMESTAMP)', (node, their_user_id, handle))
 
 def rename_user (userid, handle):
-   db.do ('update user set handle=? where user_id=?', (handle, userid))
+   db.do ('update user set user_handle=? where user_id=?', (handle, userid))
    
