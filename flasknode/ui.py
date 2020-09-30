@@ -51,10 +51,12 @@ def ui_messages():
    m = api.message_list(server=s)
    heading = ''
    tracer = ''
+   post_s = ''
    if s != None:
       server = model.get_session (s)
       heading = "Messages on '%s' (session %s):<br>" % (server['nickname'], s)
       tracer = '&s=%s' % s
+      post_s = '<input type="hidden" id="s" name="s" value="%s">' % s
 
    def enlist (message):
       if message['comments'] > 0:
@@ -64,11 +66,12 @@ def ui_messages():
       return '<li>%s (%s) - <a href="/ui/messages/m?id=%s%s">%s</a>%s</li>' % (message['user'], message['date'], message['id'], tracer, message['subject'], count)
    form = """
       <form action="/ui/messages/post" method="post">
+      %s
       <label for="subject">Subject:</label> <input type="text" id="subject" name="subject"><br/>
       <textarea id="message" name="message" rows="3" cols="80"></textarea><br/>
       <input type="submit" value="Post message">
       </form>
-   """
+   """ % post_s
    if len(m):
       return """
          %s
@@ -83,8 +86,13 @@ def ui_messages():
 # UI messages/post = API /message/post
 @app.route('/ui/messages/post', methods=['POST'])
 def ui_message_post():
+   s = request.form.get('s', None)
+   tracer = ''
+   if s != None:
+      tracer = '&s=%s' % s
+
    id = api.message_post (request.form['subject'], request.form['message'])
-   return redirect('/ui/messages/m?id=%s' % id)
+   return redirect('/ui/messages/m?id=%s%s' % (id, tracer))
 
 
 # UI messages/m = API /message
