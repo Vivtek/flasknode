@@ -76,8 +76,8 @@ def get_message (message_id, server=None):
 def api_message_post():
    content = request.get_json()
    (user, is_new) = get_session_user (content)
-   message_post (content['subject'], content['message'], user=user)
-   retval = {'ok':'ok'}
+   id = message_post (content['subject'], content['message'], user=user)
+   retval = {'ok':'ok', 'id':id}
    if is_new:
       retval['user'] = '?'
    return jsonify(retval)
@@ -85,7 +85,9 @@ def api_message_post():
 def message_post(subject, message, server=None, user=1):
    if server == None:
       return model.new_message(subject, message, user=user)
-   return remote_api (server, 'p', '/message/post', {'subject':subject, 'message':message})
+   else:
+      retval = remote_api (server, 'p', '/message/post', {'subject':subject, 'message':message})
+      return retval['id']
 
 
 # API /message/zero -> not exposed in UI   
