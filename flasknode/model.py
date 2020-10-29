@@ -65,7 +65,7 @@ def get_message(msgid):
    def extract(row):
       if row['id'] > max_comment:
          max_comment = row['id']
-      return {'id':row['id'], 'user_id':row['user_id'], 'user':row['user'], 'date':row['date'], 'message':row['message']}
+      return {'id':row['id'], 'user_id':row['user_id'], 'user':row['user'], 'date':row['date'], 'subject':row['subject'], 'message':row['message']}
       
    message = db.query ("""
       select m.message_id as id, m.user_id as user_id, u.user_handle as user, m.subject as subject, m.create_date as date, m.message as message
@@ -73,7 +73,7 @@ def get_message(msgid):
        where m.message_id=?
    """, (msgid,), one=True)
    comments = list(map (extract, db.query ("""
-      select m.message_id as id, m.user_id as user_id, u.user_handle as user, m.create_date as date, m.message as message
+      select m.message_id as id, m.user_id as user_id, u.user_handle as user, m.create_date as date, m.subject as subject, m.message as message
         from message m left join user u on m.user_id=u.user_id
        where parent=?
    """, (msgid,))))
@@ -94,10 +94,11 @@ def get_message_subscription (node, msgid):
             'date':message['date'], 'node_id':message['node_id'], 'node_msg_id':message['node_msg_id']
            }
    
-def new_comment(parent, subject, message, user=1):
+def new_comment(parent, subject, message, user=1, sub_node='', sub_msg=0):
    if user == None:
       user = 1
-   row = db.insert ('insert into message (user_id, parent, subject, message, create_date) values (?, ?, ?, ?, CURRENT_TIMESTAMP)', (user, parent, subject, message))
+   row = db.insert ('insert into message (user_id, parent, subject, message, node_src, node_src_msg_id, create_date) values (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
+                    (user, parent, subject, message, sub_node, sub_msg))
    #socketio.emit('feed', get_message(row), room='feed', json=True)
    return row
 

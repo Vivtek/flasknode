@@ -140,15 +140,16 @@ def get_session_user (content):
       
    return (user, new_user)
    
-def find_or_make_remote_user (session, user):
+def find_or_make_remote_user (session, user, name='anon'):
     our_user = model.find_remote_user(session['node'], user)
     if our_user == None:
        #new_user = True
        if user == 1: # a remote null user - we know their nickname
           our_user = model.add_remote_user(session['node'], user, session['nickname'])
        else:
-          our_user = model.add_remote_user(session['node'], user, 'anon')
-          model.rename_user (our_user, 'anon-%s' % our_user)
+          our_user = model.add_remote_user(session['node'], user, name)
+          if name == 'anon':
+             model.rename_user (our_user, 'anon-%s' % our_user)
     return our_user
 
 # ---------------------------------------------------------------------------------------------------
@@ -208,9 +209,12 @@ def check_or_make_subscription (s, m, make=False):
    # Ask remote server for the subscribed message
    print ("subscribing!")
    remote_message = remote_api (s, 'g', '/subscription/start', {'id':m})
-   our_user = find_or_make_remote_user (s, remote_message['user'])
+   our_user = find_or_make_remote_user (session, remote_message['user_id'], remote_message['user'])
    our_msg = model.new_message (remote_message['subject'], remote_message['message'], user=our_user, sub_node=session['node'], sub_msg=remote_message['id'])
    # Do the same for comments
+   for comment in remote_message['comments']:
+      our_user = find_or_make_remote_user (session, comment['user_id'], comment['user'])
+      model.new_comment (our_msg, comment['subject'], comment['message'], user=our_user, sub_node=session['node'], sub_msg=comment['id'])
    return our_msg
 
 @app.route('/subscription/start')
