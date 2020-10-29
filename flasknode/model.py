@@ -88,6 +88,8 @@ def get_message_subscription (node, msgid):
         from message m left join user u on m.user_id=u.user_id
        where m.node_src=? and m.node_src_msg_id=?
    """, (node, msgid), one=True)
+   if message == None:
+      return None
    return {'id':message['id'], 'user_id':message['user_id'], 'user':message['user'], 'subject':message['subject'],
             'date':message['date'], 'node_id':message['node_id'], 'node_msg_id':message['node_msg_id']
            }
@@ -201,4 +203,4 @@ def rename_user (userid, handle):
 
 def make_subscription (node, message):
    curver = get_curver()
-   return db.insert ('insert into subscriber (node_id, message_id, subscribed at) values (?, ?, ?)', (node, message, curver))
+   return db.insert ('insert into subscriber (node_id, message_id, subscribed_at) values (?, ?, ?)', (node, message, curver))

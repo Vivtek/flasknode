@@ -206,7 +206,8 @@ def check_or_make_subscription (s, m, make=False):
       return None
    # So let's subscribe!
    # Ask remote server for the subscribed message
-   remote_message = remote_api (s, 'g', '/subscription/start', {'id':message_id})
+   print ("subscribing!")
+   remote_message = remote_api (s, 'g', '/subscription/start', {'id':m})
    our_user = find_or_make_remote_user (s, remote_message['user'])
    our_msg = model.new_message (remote_message['subject'], remote_message['message'], user=our_user, sub_node=session['node'], sub_msg=remote_message['id'])
    # Do the same for comments

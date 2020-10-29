@@ -146,11 +146,11 @@ def ui_message_show():
 # UI messages/subscribe --> No API yet
 @app.route('/ui/messages/subscribe', methods=['GET'])
 def ui_message_subscribe():
-   s = request.form.get('s', None)
-   m = request.form.get('id', None)
+   s = request.args.get('s', None)
+   m = request.args.get('id', None)
    tracer = ''
    if s == None:
-      return redirect('/ui/messages/m/id=%s' % id)
+      return redirect('/ui/messages/m/id=%s' % m)
       
    id = api.check_or_make_subscription (s, m, make=True)
    return redirect('/ui/messages/m?id=%s' % id)
