@@ -63,6 +63,7 @@ def get_messages(last=20):
 def get_message(msgid):
    max_comment = 0
    def extract(row):
+      nonlocal max_comment
       if row['id'] > max_comment:
          max_comment = row['id']
       return {'id':row['id'], 'user_id':row['user_id'], 'user':row['user'], 'date':row['date'], 'subject':row['subject'], 'message':row['message']}
