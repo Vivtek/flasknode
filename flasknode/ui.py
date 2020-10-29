@@ -106,7 +106,8 @@ def ui_message_show():
    post_s = ''
    if s != None:
       server = model.get_session (s)
-      heading = "<tr><td>Message on:</td><td>'%s' (session %s)</td></tr>" % (server['nickname'], s)
+      subscribe = '[ <a href="/ui/messages/subscribe?id=%s&s=%s">subscribe</a> ]' % (m['id'], s)
+      heading = "<tr><td>Message on:</td><td>'%s' (session %s) %s</td></tr>" % (server['nickname'], s, subscribe)
       tracer1 = '&s=%s' % s
       tracer2 = '?s=%s' % s
       post_s = '<input type="hidden" id="s" name="s" value="%s">' % s
@@ -141,6 +142,20 @@ def ui_message_show():
      <br/>
      %s
    """ % (tracer2, heading, m['id'], m['date'], m['user'], m['subject'], m['message'], "<br/>".join(map(enlist, m['comments'])), form)
+   
+# UI messages/subscribe --> No API yet
+@app.route('/ui/messages/subscribe', methods=['GET'])
+def ui_message_subscribe():
+   s = request.form.get('s', None)
+   m = request.form.get('id', None)
+   tracer = ''
+   if s == None:
+      return redirect('/ui/messages/m/id=%s' % id)
+      
+   id = api.check_or_make_subscription (s, m, make=True)
+   return redirect('/ui/messages/m?id=%s' % id)
+
+
 
 # ---------------------------------------------------------------------------------------------------
 # Comments (reading happens with the messages; this is just posting)

@@ -25,6 +25,7 @@ CREATE TABLE message (
   node_id text default '',   -- If this message is a subscription, this is its canonical location
   node_msg_id int default 0,
   node_src text default '',  -- If this message is a subscription, this is our source for it
+  node_src_msg_id int default 0,
   user_id int default 0,
   type_id text,
   subject text,

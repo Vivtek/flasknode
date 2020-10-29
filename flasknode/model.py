@@ -35,13 +35,14 @@ def get_curver():
 # Messages and comments
 # --------------------------------------------------------------------------------------------------------------
 
-def new_message(subject, message, user=1):
-   row = db.insert ('insert into message (user_id, subject, message, create_date) values (?, ?, ?, CURRENT_TIMESTAMP)', (user, subject, message))
+def new_message(subject, message, user=1, sub_node='', sub_msg=0):
+   row = db.insert ('insert into message (user_id, subject, message, node_src, node_src_msg_id, create_date) values (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
+                    (user, subject, message, sub_node, sub_msg))
    socketio.emit('feed', get_message(row), room='feed', json=True)
    return row
    
-def zero_messages():
-   ret = db.do ('delete from message')
+#def zero_messages():
+#   ret = db.do ('delete from message')
 
 def get_messages(last=20):
    def extract(row):
@@ -60,8 +61,11 @@ def get_messages(last=20):
    return list(map (extract, messages))
 
 def get_message(msgid):
+   max_comment = 0
    def extract(row):
-      return {'user_id':row['user_id'], 'user':row['user'], 'date':row['date'], 'message':row['message']}
+      if row['id'] > max_comment:
+         max_comment = row['id']
+      return {'id':row['id'], 'user_id':row['user_id'], 'user':row['user'], 'date':row['date'], 'message':row['message']}
       
    message = db.query ("""
       select m.message_id as id, m.user_id as user_id, u.user_handle as user, m.subject as subject, m.create_date as date, m.message as message
@@ -74,7 +78,18 @@ def get_message(msgid):
        where parent=?
    """, (msgid,))))
    return {'id':message['id'], 'user_id':message['user_id'], 'user':message['user'], 'subject':message['subject'],
-            'date':message['date'], 'message':message['message'], 'comments':comments
+            'date':message['date'], 'message':message['message'], 'comments':comments, 'max_comment':max_comment
+           }
+           
+def get_message_subscription (node, msgid):
+   message = db.query ("""
+      select m.message_id as id, m.user_id as user_id, u.user_handle as user, m.subject as subject, m.create_date as date, m.message as message,
+             m.node_id as node_id, m.node_msg_id as node_msg_id
+        from message m left join user u on m.user_id=u.user_id
+       where m.node_src=? and m.node_src_msg_id=?
+   """, (node, msgid), one=True)
+   return {'id':message['id'], 'user_id':message['user_id'], 'user':message['user'], 'subject':message['subject'],
+            'date':message['date'], 'node_id':message['node_id'], 'node_msg_id':message['node_msg_id']
            }
    
 def new_comment(parent, subject, message, user=1):
@@ -179,4 +194,11 @@ def add_remote_user (node, their_user_id, handle):
 
 def rename_user (userid, handle):
    db.do ('update user set user_handle=? where user_id=?', (handle, userid))
-   
+
+# --------------------------------------------------------------------------------------------------------------
+# Subscriptions
+# --------------------------------------------------------------------------------------------------------------
+
+def make_subscription (node, message):
+   curver = get_curver()
+   return db.insert ('insert into subscriber (node_id, message_id, subscribed at) values (?, ?, ?)', (node, message, curver))

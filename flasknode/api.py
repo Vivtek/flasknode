@@ -139,6 +139,17 @@ def get_session_user (content):
       user = our_user
       
    return (user, new_user)
+   
+def find_or_make_remote_user (session, user):
+    our_user = model.find_remote_user(session['node'], user)
+    if our_user == None:
+       #new_user = True
+       if user == 1: # a remote null user - we know their nickname
+          our_user = model.add_remote_user(session['node'], user, session['nickname'])
+       else:
+          our_user = model.add_remote_user(session['node'], user, 'anon')
+          model.rename_user (our_user, 'anon-%s' % our_user)
+    return our_user
 
 # ---------------------------------------------------------------------------------------------------
 # Sessions
@@ -181,6 +192,32 @@ def session_connect (ip, port):
    response = r.json()
    model.update_session (session, response['session'])
    return session
+   
+# ---------------------------------------------------------------------------------------------------
+# Subscriptions
+# ---------------------------------------------------------------------------------------------------
+
+def check_or_make_subscription (s, m, make=False):
+   session = model.get_session (s) # Handle if session isn't found
+   subscribed_message = model.get_message_subscription (s, m)
+   if subscribed_message != None:
+      return subscribed_message['id']
+   if make == False:
+      return None
+   # So let's subscribe!
+   # Ask remote server for the subscribed message
+   remote_message = remote_api (s, 'g', '/subscription/start', {'id':message_id})
+   our_user = find_or_make_remote_user (s, remote_message['user'])
+   our_msg = model.new_message (remote_message['subject'], remote_message['message'], user=our_user, sub_node=session['node'], sub_msg=remote_message['id'])
+   # Do the same for comments
+   return our_msg
+
+@app.route('/subscription/start')
+def api_subscribe():
+   message = model.get_message(request.args['id']) # Make sure this message exists
+   remote = model.get_session (request.args['session'])
+   model.make_subscription (remote['node'], message['id'])
+   return jsonify (message)
 
 # ---------------------------------------------------------------------------------------------------
 # Calling a remote API
