@@ -12,6 +12,7 @@ BEGIN TRANSACTION;
 CREATE TABLE client (
   client_id INTEGER PRIMARY KEY NOT NULL,
   node_id text,
+  node_name text, --- not used yet
   version text
 );
 
@@ -45,7 +46,7 @@ CREATE TABLE nodes (
 
 --
 -- Table: swarm
--- Keeps track of where we have seen the nodes we know about.
+-- Keeps track of where we have seen the (connectable) nodes we know about.
 --
 CREATE TABLE swarm (
   ip text,
@@ -63,7 +64,9 @@ CREATE TABLE session (
   node_id text,
   their_session int,
   started timestamp,
-  ip text,  --- current IP/port combination for this session
+  connectable int,     --- this is the partner node's own assessment of its connectability
+  dead int,
+  ip text,              --- current IP/port combination for this session
   port int
 );
 

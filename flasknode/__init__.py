@@ -23,9 +23,9 @@ app.my_ip = my_ip
 app.fnconfig = config
 app.this_node = '_unknown_node_'
 if my_ip == external_ip:
-  app.connectable = True
+  app.connectable = 1
 else:
-  app.connectable = False
+  app.connectable = 0
   print ("Warning: node is not connectable")
 
 subnet.start_subnet_maintenance(app)

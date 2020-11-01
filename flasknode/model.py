@@ -153,7 +153,7 @@ def get_session(sessid):
       'their':    session['their_session']
    }
 
-def verify_session(node, ip, port):
+def verify_session(node, ip, port, connectable):
    srec = db.query('select session_id, ip, port from session where node_id=?', (node,), one=True)
    if srec != None:
       if srec['ip'] != ip or srec['port'] != port:
@@ -161,7 +161,7 @@ def verify_session(node, ip, port):
          srec = None
       else:
          return srec['session_id']
-   session = db.insert ('insert into session (node_id, ip, port, started) values (?, ?, ?, CURRENT_TIMESTAMP)', (node, ip, port))
+   session = db.insert ('insert into session (node_id, ip, port, connectable, started) values (?, ?, ?, ?, CURRENT_TIMESTAMP)', (node, ip, port, connectable))
    return session
 
    

@@ -31,7 +31,7 @@ def hello ():
    curver = model.get_curver()
    model.verify_node (hello['node'], hello['nickname'], hello['curver']);
    model.update_swarm (hello['node'], hello['ip'], hello['port'])
-   session = model.verify_session (hello['node'], hello['ip'], hello['port'])
+   session = model.verify_session (hello['node'], hello['ip'], hello['port']. hello['connectable'])
    model.update_session (session, hello['session'])
    
    return {
@@ -189,7 +189,7 @@ def session_connect (ip, port):
    session = model.verify_session (node['node'], ip, port)
    
    post = {'node':client['node_id'], 'nickname':client['nickname'], 'curver':curver, 'version':client['version'], 'session':session, 'ip':app.my_ip, 'port':5000}
-   r = requests.post("http://%s:%s/hello" % (ip,port), json=post)
+   r = requests.post("http://%s:%s/hello" % (ip, port, app.connectable), json=post)
    response = r.json()
    model.update_session (session, response['session'])
    return session
