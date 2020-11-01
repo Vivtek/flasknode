@@ -206,6 +206,11 @@ def ui_sessions():
 @app.route('/ui/sessions/s', methods=['GET'])
 def ui_session_show():
    s = api.get_session(request.args.get('id', ''))
+   
+   if s['connectable'] == 1:
+      feed_link = "<a href=\"/ui/messages?s=%s\">See feed</a>" % s['session']
+   else:
+      feed_link = '(node is not connectable)'
 
    return """
      [ <a href="/ui/sessions">back</a> ]
@@ -216,8 +221,8 @@ def ui_session_show():
      <tr><td>IP:</td><td>%s:%s</td></tr>
      </table>
      <br/>
-     <a href="/ui/messages?s=%s">See feed</a>
-   """ % tuple([s[x] for x in ['session', 'node', 'nickname', 'ip', 'port', 'session']])
+     %s
+   """ % (s['session'], s['node'], s['nickname'], s['ip'], s['port'], feed_link)
 
 # UI sessions/connect = API /session/connect
 @app.route('/ui/sessions/connect', methods=['POST'])

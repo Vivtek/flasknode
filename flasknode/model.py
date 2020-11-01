@@ -124,7 +124,7 @@ def get_updates(from_id):
 
 def get_sessions():
    sessions = db.query ("""
-    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session, s.ip, s.port
+    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session, s.ip, s.port, s.connectable
            from  session s left join nodes n on s.node_id = n.node_id
    """)
    def extract(row):
@@ -133,6 +133,7 @@ def get_sessions():
          'nickname':      row['nickname'],
          'session':       row['session'],
          'their_session': row['their_session'],
+         'connectable':   row['connectable'],
          'ip':            row['ip'],
          'port':          row['port']
       }
@@ -140,17 +141,18 @@ def get_sessions():
 
 def get_session(sessid):
    session = db.query ("""
-    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session, s.ip, s.port
+    select       s.node_id as node, n.nickname as nickname, s.session_id as session, s.their_session as their_session, s.ip, s.port, s.connectable
            from  session s left join nodes n on s.node_id = n.node_id
           where  session=?
    """, (sessid,), one=True)
    return {
-      'session':  session['session'],
-      'node':     session['node'],
-      'nickname': session['nickname'],
-      'ip':       session['ip'],
-      'port':     session['port'],
-      'their':    session['their_session']
+      'session':     session['session'],
+      'node':        session['node'],
+      'nickname':    session['nickname'],
+      'connectable': session['connectable'],
+      'ip':          session['ip'],
+      'port':        session['port'],
+      'their':       session['their_session']
    }
 
 def verify_session(node, ip, port, connectable=1):
